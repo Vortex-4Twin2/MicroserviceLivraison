@@ -1,33 +1,35 @@
 package tn.esprit.twin.microservicelivraison.service;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.twin.microservicelivraison.model.Livraison;
 import tn.esprit.twin.microservicelivraison.repository.LivraisonRepository;
 
-
 import java.util.List;
 
 @Service
 @RequiredArgsConstructor
-public class LivraisonService {
+public class LivraisonService implements ILivraisonService {
 
     private final LivraisonRepository repository;
 
+    @Override
     public Livraison createLivraison(Livraison livraison) {
         livraison.setStatus("EN_PREPARATION");
         return repository.save(livraison);
     }
 
+    @Override
     public List<Livraison> getAllLivraisons() {
         return repository.findAll();
     }
 
+    @Override
     public Livraison getLivraisonById(String id) {
         return repository.findById(id).orElse(null);
     }
 
+    @Override
     public Livraison updateLivraison(String id, Livraison updated) {
         Livraison livraison = repository.findById(id).orElse(null);
 
@@ -41,6 +43,7 @@ public class LivraisonService {
         return null;
     }
 
+    @Override
     public void deleteLivraison(String id) {
         repository.deleteById(id);
     }

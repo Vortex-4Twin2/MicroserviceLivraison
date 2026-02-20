@@ -1,21 +1,19 @@
 package tn.esprit.twin.microservicelivraison.controller;
 
-
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.twin.microservicelivraison.model.Livraison;
-import tn.esprit.twin.microservicelivraison.service.LivraisonService;
-
+import tn.esprit.twin.microservicelivraison.service.ILivraisonService;
 
 import java.util.List;
 
 @RestController
-@RequestMapping("/api/livraisons")
+@RequestMapping("/livraisons")
 @RequiredArgsConstructor
 @CrossOrigin
 public class LivraisonController {
 
-    private final LivraisonService service;
+    private final ILivraisonService service;
 
     @PostMapping
     public Livraison create(@RequestBody Livraison livraison) {
