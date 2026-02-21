@@ -2,9 +2,12 @@ package tn.esprit.twin.microservicelivraison.service;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import tn.esprit.twin.microservicelivraison.model.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.UserClient;
 import tn.esprit.twin.microservicelivraison.repository.LivraisonRepository;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
+import tn.esprit.twin.microservicelivraison.dto.UserDTO;
+
 
 import java.util.List;
 
@@ -13,6 +16,9 @@ import java.util.List;
 public class LivraisonService implements ILivraisonService {
 
     private final LivraisonRepository repository;
+
+    // ✅ Injection Feign Client
+    private final UserClient userClient;
 
     @Override
     public Livraison createLivraison(Livraison livraison) {
@@ -31,6 +37,23 @@ public class LivraisonService implements ILivraisonService {
 
         // Exemple simple : prix livraison = 10% du total
         livraison.setPrixLivraison(commandeDTO.getTotal() * 0.1);
+
+        return repository.save(livraison);
+    }
+
+    // 🟢 Nouvelle méthode Synchrone avec User (Feign)
+    public Livraison createLivraisonFromUser(Long userId) {
+
+        // 1️⃣ Appel REST vers user-service
+        UserDTO user = userClient.getUserById(userId);
+
+        // 2️⃣ Création Livraison avec données user
+        Livraison livraison = new Livraison();
+        livraison.setOrderId(null); // si pas liée à commande
+        livraison.setAdresse(user.getAdresse());
+        livraison.setVille("Tunis");
+        livraison.setStatus("EN_PREPARATION");
+        livraison.setPrixLivraison(8.0);
 
         return repository.save(livraison);
     }

@@ -1,6 +1,6 @@
 package tn.esprit.twin.microservicelivraison.service;
 
-import tn.esprit.twin.microservicelivraison.model.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.Livraison;
 
 import java.util.List;
 

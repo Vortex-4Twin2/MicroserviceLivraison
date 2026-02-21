@@ -1,7 +1,7 @@
 package tn.esprit.twin.microservicelivraison.repository;
 
 import org.springframework.data.mongodb.repository.MongoRepository;
-import tn.esprit.twin.microservicelivraison.model.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.Livraison;
 
 import java.util.List;
 

@@ -1,4 +1,4 @@
-package tn.esprit.twin.microservicelivraison.ConfigRabbit;
+package tn.esprit.twin.microservicelivraison.Config;
 
 import org.springframework.amqp.core.Queue;
 import org.springframework.amqp.rabbit.config.SimpleRabbitListenerContainerFactory;

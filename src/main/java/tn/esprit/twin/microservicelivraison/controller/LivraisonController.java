@@ -2,9 +2,10 @@ package tn.esprit.twin.microservicelivraison.controller;
 
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
-import tn.esprit.twin.microservicelivraison.model.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.Livraison;
 import tn.esprit.twin.microservicelivraison.service.ILivraisonService;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
+import tn.esprit.twin.microservicelivraison.service.LivraisonService;
 
 import java.util.List;
 
@@ -46,12 +47,11 @@ public class LivraisonController {
     }
 
     // =========================
-    // 🟢 ENDPOINT TEST CONSUMER
+    // 🟢 ENDPOINT TEST CONSUMER (ASYNC SIMULATION)
     // =========================
 
     @PostMapping("/test-consumer")
     public Livraison testConsumer(@RequestBody CommandeDTO commandeDTO) {
-
 
         Livraison livraison = new Livraison();
         livraison.setOrderId(commandeDTO.getId());
@@ -61,5 +61,18 @@ public class LivraisonController {
         livraison.setPrixLivraison(8.0);
 
         return service.createLivraison(livraison);
+    }
+
+    // =========================
+    // 🟢 NOUVEL ENDPOINT SYNCHRONE AVEC USER (Feign)
+    // =========================
+
+    @PostMapping("/from-user/{userId}")
+    public Livraison createFromUser(@PathVariable Long userId) {
+
+        // Cast vers implémentation pour accéder à la nouvelle méthode
+        LivraisonService livraisonService = (LivraisonService) service;
+
+        return livraisonService.createLivraisonFromUser(userId);
     }
 }

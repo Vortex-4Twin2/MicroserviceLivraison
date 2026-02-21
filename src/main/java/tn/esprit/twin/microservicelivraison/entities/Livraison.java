@@ -1,4 +1,4 @@
-package tn.esprit.twin.microservicelivraison.model;
+package tn.esprit.twin.microservicelivraison.entities;
 
 import lombok.Getter;
 import lombok.Setter;
