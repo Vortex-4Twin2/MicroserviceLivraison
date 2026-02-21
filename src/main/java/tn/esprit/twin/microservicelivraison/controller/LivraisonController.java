@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.twin.microservicelivraison.model.Livraison;
 import tn.esprit.twin.microservicelivraison.service.ILivraisonService;
+import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
 
 import java.util.List;
 
@@ -14,6 +15,10 @@ import java.util.List;
 public class LivraisonController {
 
     private final ILivraisonService service;
+
+    // =========================
+    // CRUD NORMAL
+    // =========================
 
     @PostMapping
     public Livraison create(@RequestBody Livraison livraison) {
@@ -38,5 +43,23 @@ public class LivraisonController {
     @DeleteMapping("/{id}")
     public void delete(@PathVariable String id) {
         service.deleteLivraison(id);
+    }
+
+    // =========================
+    // 🟢 ENDPOINT TEST CONSUMER
+    // =========================
+
+    @PostMapping("/test-consumer")
+    public Livraison testConsumer(@RequestBody CommandeDTO commandeDTO) {
+
+
+        Livraison livraison = new Livraison();
+        livraison.setOrderId(commandeDTO.getId());
+        livraison.setAdresse(commandeDTO.getAdresseLivraison());
+        livraison.setVille("Tunis");
+        livraison.setStatus("EN_PREPARATION");
+        livraison.setPrixLivraison(8.0);
+
+        return service.createLivraison(livraison);
     }
 }

@@ -4,6 +4,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.twin.microservicelivraison.model.Livraison;
 import tn.esprit.twin.microservicelivraison.repository.LivraisonRepository;
+import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
 
 import java.util.List;
 
@@ -16,6 +17,21 @@ public class LivraisonService implements ILivraisonService {
     @Override
     public Livraison createLivraison(Livraison livraison) {
         livraison.setStatus("EN_PREPARATION");
+        return repository.save(livraison);
+    }
+
+    // 🔥 Nouvelle méthode appelée par RabbitMQ
+    public Livraison createLivraisonFromCommande(CommandeDTO commandeDTO) {
+
+        Livraison livraison = new Livraison();
+
+        livraison.setOrderId(commandeDTO.getId());
+        livraison.setAdresse(commandeDTO.getAdresseLivraison());
+        livraison.setStatus("EN_PREPARATION");
+
+        // Exemple simple : prix livraison = 10% du total
+        livraison.setPrixLivraison(commandeDTO.getTotal() * 0.1);
+
         return repository.save(livraison);
     }
 
