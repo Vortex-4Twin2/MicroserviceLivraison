@@ -22,6 +22,8 @@ public class Livraison {
     private String orderId;
     private String adresse;
     private String ville;
-    private String status; // EN_PREPARATION, EN_COURS, LIVREE
+
+    private LivraisonStatus status;
+
     private Double prixLivraison;
 }

@@ -3,6 +3,7 @@ package tn.esprit.twin.microservicelivraison.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.twin.microservicelivraison.entities.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.LivraisonStatus;
 import tn.esprit.twin.microservicelivraison.service.ILivraisonService;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
 import tn.esprit.twin.microservicelivraison.service.LivraisonService;
@@ -57,10 +58,20 @@ public class LivraisonController {
         livraison.setOrderId(commandeDTO.getId());
         livraison.setAdresse(commandeDTO.getAdresseLivraison());
         livraison.setVille("Tunis");
-        livraison.setStatus("EN_PREPARATION");
+        livraison.setStatus(LivraisonStatus.EN_ATTENTE);
         livraison.setPrixLivraison(8.0);
 
         return service.createLivraison(livraison);
+    }
+
+    @PutMapping("/{id}/status")
+    public Livraison updateStatus(
+            @PathVariable String id,
+            @RequestParam LivraisonStatus status) {
+
+        LivraisonService livraisonService = (LivraisonService) service;
+
+        return livraisonService.updateStatus(id, status);
     }
 
     // =========================
