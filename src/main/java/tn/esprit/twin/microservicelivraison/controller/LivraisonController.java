@@ -3,6 +3,7 @@ package tn.esprit.twin.microservicelivraison.controller;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 import tn.esprit.twin.microservicelivraison.entities.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.LivraisonHistory;
 import tn.esprit.twin.microservicelivraison.entities.LivraisonStatus;
 import tn.esprit.twin.microservicelivraison.service.ILivraisonService;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
@@ -72,6 +73,14 @@ public class LivraisonController {
         LivraisonService livraisonService = (LivraisonService) service;
 
         return livraisonService.updateStatus(id, status);
+    }
+
+    @GetMapping("/{id}/history")
+    public List<LivraisonHistory> getHistory(@PathVariable String id) {
+
+        LivraisonService livraisonService = (LivraisonService) service;
+
+        return livraisonService.getHistory(id);
     }
 
     // =========================

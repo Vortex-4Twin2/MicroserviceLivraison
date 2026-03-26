@@ -3,13 +3,17 @@ package tn.esprit.twin.microservicelivraison.service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import tn.esprit.twin.microservicelivraison.entities.Livraison;
+import tn.esprit.twin.microservicelivraison.entities.LivraisonHistory;
 import tn.esprit.twin.microservicelivraison.entities.LivraisonStatus;
 import tn.esprit.twin.microservicelivraison.entities.UserClient;
+import tn.esprit.twin.microservicelivraison.repository.LivraisonHistoryRepository;
 import tn.esprit.twin.microservicelivraison.repository.LivraisonRepository;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
 import tn.esprit.twin.microservicelivraison.dto.UserDTO;
 import tn.esprit.twin.microservicelivraison.dto.LivraisonEventDTO;
+import tn.esprit.twin.microservicelivraison.workflow.LivraisonWorkflow;
 
+import java.time.LocalDateTime;
 import java.util.List;
 
 @Service
@@ -18,6 +22,7 @@ public class LivraisonService implements ILivraisonService {
 
     private final LivraisonRepository repository;
     private final UserClient userClient;
+    private final LivraisonHistoryRepository historyRepository;
 
     // ✅ Kafka Producer
     private final LivraisonProducer livraisonProducer;
@@ -48,32 +53,65 @@ public class LivraisonService implements ILivraisonService {
         Livraison liv = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livraison introuvable"));
 
+        // 🧠 نخزنو القديم قبل التغيير
+        LivraisonStatus oldStatus = liv.getStatus();
+
         // ❌ règles métier
-        if (liv.getStatus() == LivraisonStatus.LIVREE) {
+        if (oldStatus == LivraisonStatus.LIVREE) {
             throw new RuntimeException("Déjà livrée !");
         }
 
-        if (liv.getStatus() == LivraisonStatus.ANNULEE) {
+        if (oldStatus == LivraisonStatus.ANNULEE) {
             throw new RuntimeException("Livraison annulée !");
         }
 
-        liv.setStatus(newStatus);
+        // ✅ validation transition
+        if (!LivraisonWorkflow.isValidTransition(oldStatus, newStatus)) {
+            throw new RuntimeException(
+                    "Transition invalide entre " + oldStatus + " et " + newStatus
+            );
+        }
 
-        // 🔥 Kafka seulement si LIVREE
-        if (newStatus == LivraisonStatus.LIVREE) {
+        // ✅ validation métier
+        if (newStatus == LivraisonStatus.LIVREE && liv.getAdresse() == null) {
+            throw new RuntimeException("Adresse obligatoire pour livrer !");
+        }
+
+        // 🔥 Kafka BEFORE change
+        if (oldStatus != LivraisonStatus.LIVREE
+                && newStatus == LivraisonStatus.LIVREE) {
 
             LivraisonEventDTO event = new LivraisonEventDTO(
                     liv.getId(),
                     liv.getOrderId(),
                     liv.getAdresse(),
-                    liv.getStatus().name(),
+                    newStatus.name(),
                     liv.getPrixLivraison()
             );
 
             livraisonProducer.sendLivraison(event);
         }
 
+        // ✅ change status
+        liv.setStatus(newStatus);
+
+        // ✅ save history (correct)
+        historyRepository.save(new LivraisonHistory(
+                null,
+                liv.getId(),
+                oldStatus.name(),
+                newStatus.name(),
+                LocalDateTime.now().toString()
+        ));
+
         return repository.save(liv);
+    }
+
+    public List<LivraisonHistory> getHistory(String livraisonId) {
+        return historyRepository.findAll()
+                .stream()
+                .filter(h -> h.getLivraisonId().equals(livraisonId))
+                .toList();
     }
 
     // 🔥 RabbitMQ (existant - NE PAS TOUCHER)
