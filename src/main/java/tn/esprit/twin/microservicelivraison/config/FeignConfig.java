@@ -1,4 +1,4 @@
-package tn.esprit.twin.microservicelivraison.Config;
+package tn.esprit.twin.microservicelivraison.config;
 
 import feign.codec.Decoder;
 import feign.codec.Encoder;

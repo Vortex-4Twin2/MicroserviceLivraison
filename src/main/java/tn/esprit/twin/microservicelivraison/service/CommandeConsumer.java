@@ -6,7 +6,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.amqp.rabbit.annotation.RabbitListener;
 import org.springframework.stereotype.Service;
-import tn.esprit.twin.microservicelivraison.Config.RabbitMQConfig;
+import tn.esprit.twin.microservicelivraison.config.RabbitMQConfig;
 import tn.esprit.twin.microservicelivraison.dto.CommandeDTO;
 
 @Service
