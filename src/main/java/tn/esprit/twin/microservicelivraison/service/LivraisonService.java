@@ -23,14 +23,11 @@ public class LivraisonService implements ILivraisonService {
     private final LivraisonRepository repository;
     private final UserClient userClient;
     private final LivraisonHistoryRepository historyRepository;
-
-    // ✅ Kafka Producer
     private final LivraisonProducer livraisonProducer;
 
     @Override
     public Livraison createLivraison(Livraison livraison) {
 
-        // ✅ initialisation correcte
         livraison.setStatus(LivraisonStatus.EN_ATTENTE);
 
         Livraison saved = repository.save(livraison);
@@ -53,8 +50,10 @@ public class LivraisonService implements ILivraisonService {
         Livraison liv = repository.findById(id)
                 .orElseThrow(() -> new RuntimeException("Livraison introuvable"));
 
-        // 🧠 نخزنو القديم قبل التغيير
         LivraisonStatus oldStatus = liv.getStatus();
+
+        System.out.println("OLD STATUS = " + oldStatus);
+        System.out.println("NEW STATUS = " + newStatus);
 
         // ❌ règles métier
         if (oldStatus == LivraisonStatus.LIVREE) {
@@ -95,14 +94,18 @@ public class LivraisonService implements ILivraisonService {
         // ✅ change status
         liv.setStatus(newStatus);
 
-        // ✅ save history (correct)
-        historyRepository.save(new LivraisonHistory(
-                null,
-                liv.getId(),
-                oldStatus.name(),
-                newStatus.name(),
-                LocalDateTime.now().toString()
-        ));
+        // ✅ save history (SAFE)
+        try {
+            historyRepository.save(new LivraisonHistory(
+                    null,
+                    liv.getId(),
+                    oldStatus.name(),
+                    newStatus.name(),
+                    LocalDateTime.now().toString()
+            ));
+        } catch (Exception e) {
+            System.out.println("❌ History error: " + e.getMessage());
+        }
 
         return repository.save(liv);
     }
@@ -114,7 +117,10 @@ public class LivraisonService implements ILivraisonService {
                 .toList();
     }
 
-    // 🔥 RabbitMQ (existant - NE PAS TOUCHER)
+    // =========================
+    // EXISTING CODE (UNCHANGED)
+    // =========================
+
     public Livraison createLivraisonFromCommande(CommandeDTO commandeDTO) {
 
         Livraison livraison = new Livraison();
@@ -127,7 +133,6 @@ public class LivraisonService implements ILivraisonService {
         return repository.save(livraison);
     }
 
-    // 🔥 Feign (existant)
     public Livraison createLivraisonFromUser(Long userId) {
 
         UserDTO user = userClient.getUserById(userId);
