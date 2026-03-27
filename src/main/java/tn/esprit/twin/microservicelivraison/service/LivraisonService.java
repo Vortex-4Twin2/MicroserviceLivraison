@@ -28,7 +28,14 @@ public class LivraisonService implements ILivraisonService {
     @Override
     public Livraison createLivraison(Livraison livraison) {
 
-        livraison.setStatus(LivraisonStatus.EN_ATTENTE);
+        if (livraison.getDateLivraison() != null &&
+                livraison.getDateLivraison().isAfter(LocalDateTime.now())) {
+
+            livraison.setStatus(LivraisonStatus.PLANIFIEE);
+
+        } else {
+            livraison.setStatus(LivraisonStatus.EN_ATTENTE);
+        }
 
         Livraison saved = repository.save(livraison);
 

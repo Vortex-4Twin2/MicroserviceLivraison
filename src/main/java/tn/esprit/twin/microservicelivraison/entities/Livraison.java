@@ -8,6 +8,8 @@ import lombok.ToString;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+import java.time.LocalDateTime;
+
 @Document(collection = "livraisons")
 @Getter
 @Setter
@@ -26,4 +28,6 @@ public class Livraison {
     private LivraisonStatus status;
 
     private Double prixLivraison;
+    private LocalDateTime dateLivraison;
+
 }
