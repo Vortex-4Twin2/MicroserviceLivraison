@@ -30,4 +30,5 @@ public class Livraison {
     private Double prixLivraison;
     private LocalDateTime dateLivraison;
 
+    private Long userId;
 }

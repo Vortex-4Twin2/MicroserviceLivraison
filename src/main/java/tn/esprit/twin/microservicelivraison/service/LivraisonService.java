@@ -24,6 +24,7 @@ public class LivraisonService implements ILivraisonService {
     private final UserClient userClient;
     private final LivraisonHistoryRepository historyRepository;
     private final LivraisonProducer livraisonProducer;
+    private final EmailService emailService;
 
     @Override
     public Livraison createLivraison(Livraison livraison) {
@@ -62,7 +63,6 @@ public class LivraisonService implements ILivraisonService {
         System.out.println("OLD STATUS = " + oldStatus);
         System.out.println("NEW STATUS = " + newStatus);
 
-        // ❌ règles métier
         if (oldStatus == LivraisonStatus.LIVREE) {
             throw new RuntimeException("Déjà livrée !");
         }
@@ -71,19 +71,17 @@ public class LivraisonService implements ILivraisonService {
             throw new RuntimeException("Livraison annulée !");
         }
 
-        // ✅ validation transition
         if (!LivraisonWorkflow.isValidTransition(oldStatus, newStatus)) {
             throw new RuntimeException(
                     "Transition invalide entre " + oldStatus + " et " + newStatus
             );
         }
 
-        // ✅ validation métier
         if (newStatus == LivraisonStatus.LIVREE && liv.getAdresse() == null) {
             throw new RuntimeException("Adresse obligatoire pour livrer !");
         }
 
-        // 🔥 Kafka BEFORE change
+        // 🔥 Kafka + EMAIL
         if (oldStatus != LivraisonStatus.LIVREE
                 && newStatus == LivraisonStatus.LIVREE) {
 
@@ -96,12 +94,33 @@ public class LivraisonService implements ILivraisonService {
             );
 
             livraisonProducer.sendLivraison(event);
+
+            // =========================
+            // ✅ EMAIL LOGIC
+            // =========================
+            try {
+                if (liv.getUserId() != null) {
+
+                    UserDTO user = userClient.getUserById(liv.getUserId());
+
+                    if (user != null && user.getEmail() != null) {
+
+                        emailService.sendEmail(
+                                user.getEmail(),
+                                "📦 Livraison effectuée",
+                                "Votre commande " + liv.getOrderId() +
+                                        " est livrée à l'adresse : " + liv.getAdresse() + " ✅"
+                        );
+                    }
+                }
+
+            } catch (Exception e) {
+                System.out.println("❌ Email error: " + e.getMessage());
+            }
         }
 
-        // ✅ change status
         liv.setStatus(newStatus);
 
-        // ✅ save history (SAFE)
         try {
             historyRepository.save(new LivraisonHistory(
                     null,
@@ -145,11 +164,14 @@ public class LivraisonService implements ILivraisonService {
         UserDTO user = userClient.getUserById(userId);
 
         Livraison livraison = new Livraison();
-        livraison.setOrderId(null);
+        livraison.setOrderId("NO_ORDER");
         livraison.setAdresse(user.getAdresse());
         livraison.setVille("Tunis");
         livraison.setStatus(LivraisonStatus.EN_ATTENTE);
         livraison.setPrixLivraison(8.0);
+
+        // ✅ NEW
+        livraison.setUserId(userId);
 
         return repository.save(livraison);
     }
