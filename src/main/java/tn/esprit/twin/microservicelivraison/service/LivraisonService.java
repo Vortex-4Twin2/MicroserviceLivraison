@@ -25,16 +25,32 @@ public class LivraisonService implements ILivraisonService {
     private final LivraisonHistoryRepository historyRepository;
     private final LivraisonProducer livraisonProducer;
     private final EmailService emailService;
+    private final WeatherService weatherService;
 
     @Override
     public Livraison createLivraison(Livraison livraison) {
+
+        if (livraison.getVille() != null) {
+
+            String meteo = weatherService.getWeather(livraison.getVille());
+
+            if (meteo.equalsIgnoreCase("Rain")) {
+                livraison.setPrixLivraison(livraison.getPrixLivraison() + 10);
+                livraison.setStatus(LivraisonStatus.EN_ATTENTE);
+            }
+
+            if (meteo.equalsIgnoreCase("Thunderstorm")) {
+                livraison.setStatus(LivraisonStatus.ANNULEE);
+            }
+        }
+
 
         if (livraison.getDateLivraison() != null &&
                 livraison.getDateLivraison().isAfter(LocalDateTime.now())) {
 
             livraison.setStatus(LivraisonStatus.PLANIFIEE);
 
-        } else {
+        } else if (livraison.getStatus() == null) {
             livraison.setStatus(LivraisonStatus.EN_ATTENTE);
         }
 
@@ -52,6 +68,7 @@ public class LivraisonService implements ILivraisonService {
 
         return saved;
     }
+
 
     public Livraison updateStatus(String id, LivraisonStatus newStatus) {
 
@@ -79,6 +96,22 @@ public class LivraisonService implements ILivraisonService {
 
         if (newStatus == LivraisonStatus.LIVREE && liv.getAdresse() == null) {
             throw new RuntimeException("Adresse obligatoire pour livrer !");
+        }
+
+        // =========================
+        // 🌦️ WEATHER LOGIC (NEW)
+        // =========================
+        if (newStatus == LivraisonStatus.LIVREE && liv.getVille() != null) {
+
+            String meteo = weatherService.getWeather(liv.getVille());
+
+            if (meteo.equalsIgnoreCase("Thunderstorm")) {
+                throw new RuntimeException("❌ Livraison annulée à cause de la météo !");
+            }
+
+            if (meteo.equalsIgnoreCase("Rain")) {
+                System.out.println("⚠️ Livraison en retard à cause de la pluie");
+            }
         }
 
         // 🔥 Kafka + EMAIL
