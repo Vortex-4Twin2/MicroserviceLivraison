@@ -44,7 +44,6 @@ public class LivraisonService implements ILivraisonService {
             }
         }
 
-
         if (livraison.getDateLivraison() != null &&
                 livraison.getDateLivraison().isAfter(LocalDateTime.now())) {
 
@@ -56,15 +55,8 @@ public class LivraisonService implements ILivraisonService {
 
         Livraison saved = repository.save(livraison);
 
-        LivraisonEventDTO event = new LivraisonEventDTO(
-                saved.getId(),
-                saved.getOrderId(),
-                saved.getAdresse(),
-                saved.getStatus().name(),
-                saved.getPrixLivraison()
-        );
-
-        livraisonProducer.sendLivraison(event);
+        // ❌ CORRECTION: نحّينا Kafka من هنا
+        // خاطر ما لازمش يتبعت كان وقت LIVREE
 
         return saved;
     }
@@ -98,9 +90,7 @@ public class LivraisonService implements ILivraisonService {
             throw new RuntimeException("Adresse obligatoire pour livrer !");
         }
 
-        // =========================
-        // 🌦️ WEATHER LOGIC (NEW)
-        // =========================
+        // 🌦️ WEATHER LOGIC
         if (newStatus == LivraisonStatus.LIVREE && liv.getVille() != null) {
 
             String meteo = weatherService.getWeather(liv.getVille());
@@ -114,7 +104,7 @@ public class LivraisonService implements ILivraisonService {
             }
         }
 
-        // 🔥 Kafka + EMAIL
+        // ✅ Kafka + Email (SEUL ENDROIT CORRECT)
         if (oldStatus != LivraisonStatus.LIVREE
                 && newStatus == LivraisonStatus.LIVREE) {
 
@@ -128,9 +118,6 @@ public class LivraisonService implements ILivraisonService {
 
             livraisonProducer.sendLivraison(event);
 
-            // =========================
-            // ✅ EMAIL LOGIC
-            // =========================
             try {
                 if (liv.getUserId() != null) {
 
